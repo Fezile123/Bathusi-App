@@ -1,0 +1,78 @@
+{
+  "_readme": "SAMPLE DATA ONLY. Entries with ids starting 'sample-' are FAKE placeholders so the app can be demonstrated. Before any real use, replace them with facilities verified from official sources (NPA/Thuthuzela list, SAPS station list, local CPF, shelter organisations), set last_verified to the date you checked, and record the source. Never invent coordinates, numbers or hours.",
+  "version": "0.1-sample",
+  "resources": [
+    {
+      "id": "hotline-gbv-command",
+      "name": "GBV Command Centre",
+      "type": "hotline",
+      "phone": "0800 428 428",
+      "lat": null,
+      "lng": null,
+      "address": null,
+      "hours": null,
+      "last_verified": null,
+      "source": "TEAM TO VERIFY with official government/DSD source before use"
+    },
+    {
+      "id": "hotline-saps-10111",
+      "name": "SAPS emergency line",
+      "type": "hotline",
+      "phone": "10111",
+      "lat": null,
+      "lng": null,
+      "address": null,
+      "hours": null,
+      "last_verified": null,
+      "source": "TEAM TO VERIFY with official SAPS source before use"
+    },
+    {
+      "id": "hotline-112",
+      "name": "Emergency number from a cell phone",
+      "type": "hotline",
+      "phone": "112",
+      "lat": null,
+      "lng": null,
+      "address": null,
+      "hours": null,
+      "last_verified": null,
+      "source": "TEAM TO VERIFY with official source before use"
+    },
+    {
+      "id": "sample-tcc-1",
+      "name": "SAMPLE Care Centre A (not a real facility)",
+      "type": "tcc",
+      "phone": null,
+      "lat": -26.2041,
+      "lng": 28.0473,
+      "address": "Sample address",
+      "hours": null,
+      "last_verified": null,
+      "source": "SAMPLE: replace with a verified entry"
+    },
+    {
+      "id": "sample-police-1",
+      "name": "SAMPLE Police Station B (not a real facility)",
+      "type": "police",
+      "phone": null,
+      "lat": -26.1952,
+      "lng": 28.0340,
+      "address": "Sample address",
+      "hours": null,
+      "last_verified": null,
+      "source": "SAMPLE: replace with a verified entry"
+    },
+    {
+      "id": "sample-cpf-1",
+      "name": "SAMPLE Community Policing Forum C (not a real facility)",
+      "type": "cpf",
+      "phone": null,
+      "lat": -26.2300,
+      "lng": 28.0800,
+      "address": "Sample address",
+      "hours": null,
+      "last_verified": null,
+      "source": "SAMPLE: replace with a verified entry"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+export const colors = {
+  bg: '#FFF7F8',
+  card: '#FFFFFF',
+  primary: '#E64B6B',
+  primarySoft: '#FDE3E8',
+  ink: '#1F1B3A',
+  muted: '#6B6780',
+  line: '#F3D5DB',
+  lilac: '#EEE8FB',
+  lilacInk: '#4B3F8F',
+  ok: '#2E9E6B',
+  vaultBg: '#14121C',
+  vaultCard: '#211E2E',
+  vaultInk: '#F4F1FA',
+  vaultMuted: '#A59FB8',
+  vaultLine: '#34304A',
+  danger: '#E5484D',
+};
