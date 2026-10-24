@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Mothusi / FloLog: full prototype source (all milestones, all members)
 
 Everything here is **UNTESTED on real devices**. It was written without being able to run Expo or Supabase.
@@ -35,3 +36,6 @@ Expect small fixes on first run, and send me any error text. See `TEST-PLAN.md`.
 | | M3 vault UI + purge | `app/vault/*`, `app/unlock.tsx`, `src/features/vault/purge.ts` |
 
 Read `BLUEPRINT-CORRECTIONS.md` and `SECURITY-NOTES.md` before the pitch.
+=======
+# Bathusi-App
+>>>>>>> b234d99ccaedb38f169e12dbfc5d883a5e30dbe2
