@@ -1,18 +1,16 @@
 import { Pressable, Text, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSecurity } from '../features/vault/SecurityContext';
+import { useOpenVault } from '../features/vault/useOpenVault';
 import { SHOW_SETUP_BUTTON } from '../config';
 import { colors } from '../theme';
 
-/** Pill in the header of the cover app. Goes to the PIN screen (or straight to the vault if already unlocked). */
+/** Pill in the header of the cover app. Opens the vault (via the PIN screen only if EXPO_PUBLIC_REQUIRE_PIN=true). */
 export function SetupAppButton() {
-  const router = useRouter();
-  const { isAuthenticated } = useSecurity();
+  const openVault = useOpenVault();
   if (!SHOW_SETUP_BUTTON) return null;
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={() => router.push(isAuthenticated ? '/vault' : '/unlock')}
+      onPress={openVault}
       style={styles.pill}
     >
       <Text style={styles.text}>Setup App</Text>

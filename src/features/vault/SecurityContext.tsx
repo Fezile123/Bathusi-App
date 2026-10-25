@@ -11,6 +11,8 @@ type SecurityState = {
   lock: () => void;
   /** Call on user activity inside the vault to extend the session. */
   touch: () => void;
+  /** Keep the vault unlocked while a screen is open that can briefly steal focus (password manager pop-ups, email app). Returns a release function. */
+  holdLock: () => () => void;
   /** Run an action (camera, mic permission dialogs) without auto-locking when the app briefly leaves the foreground. */
   withLockSuspended: <T>(fn: () => Promise<T>) => Promise<T>;
 };
@@ -21,6 +23,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setAuth] = useState(false);
   const [activity, setActivity] = useState(0);
   const suspended = useRef(false);
+  const holds = useRef(0);
 
   const lock = useCallback(() => setAuth(false), []);
   const unlock = useCallback(() => {
@@ -28,6 +31,17 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
     setActivity((n) => n + 1);
   }, []);
   const touch = useCallback(() => setActivity((n) => n + 1), []);
+
+  const holdLock = useCallback(() => {
+    holds.current += 1;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      // small delay: AppState "active" can arrive just after the pop-up closes
+      setTimeout(() => { holds.current = Math.max(0, holds.current - 1); }, 800);
+    };
+  }, []);
 
   const withLockSuspended = useCallback(async function <T>(fn: () => Promise<T>): Promise<T> {
     suspended.current = true;
@@ -44,7 +58,7 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
   // Lock whenever the app leaves the foreground (unless we deliberately suspended it).
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state !== 'active' && !suspended.current) setAuth(false);
+      if (state !== 'active' && !suspended.current && holds.current === 0) setAuth(false);
     });
     return () => sub.remove();
   }, []);
@@ -57,8 +71,8 @@ export function SecurityProvider({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, activity]);
 
   const value = useMemo<SecurityState>(
-    () => ({ isCamouflaged: !isAuthenticated, isAuthenticated, unlock, lock, touch, withLockSuspended }),
-    [isAuthenticated, unlock, lock, touch, withLockSuspended],
+    () => ({ isCamouflaged: !isAuthenticated, isAuthenticated, unlock, lock, touch, holdLock, withLockSuspended }),
+    [isAuthenticated, unlock, lock, touch, holdLock, withLockSuspended],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

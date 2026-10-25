@@ -32,7 +32,7 @@ export function SosListener() {
     enabled: sosArmed && contacts.length > 0 && active && pathname !== '/sos',
     onShake: () => {
       Vibration.vibrate(120); // tiny confirmation that the gesture was recognised
-      router.push('/sos');
+      router.push({ pathname: '/sos', params: { trigger: 'shake' } });
     },
   });
 

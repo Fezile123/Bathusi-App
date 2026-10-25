@@ -25,6 +25,7 @@ export default function VaultLayout() {
         <Stack.Screen name="directory" options={{ title: 'Support near me' }} />
         <Stack.Screen name="evidence" options={{ title: 'Evidence' }} />
         <Stack.Screen name="contacts" options={{ title: 'Trusted contacts' }} />
+        <Stack.Screen name="requests" options={{ title: 'Help requests' }} />
       </Stack>
     </View>
   );

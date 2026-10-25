@@ -1,9 +1,11 @@
-import { useRouter } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useSosFlow } from '@/features/sos/useSosFlow';
 import { SosStatus } from '@/features/sos/sosService';
 import { callNumber, openSmsToContacts } from '@/features/sos/fallback';
 import { useLocalContacts } from '@/features/sos/contactsStore';
+import { resolveMyRequest, useRequestTracker } from '@/features/sos/requestStatus';
+import { RequestTracker } from '@/components/RequestTracker';
 import { colors } from '@/theme';
 
 // Wording is deliberately neutral (looks like a backup screen) but HONEST about the outcome.
@@ -21,10 +23,46 @@ const RESULT_TEXT: Record<SosStatus, string> = {
 // After these, nothing real reached anyone, so offer the reliable phone-based options prominently.
 const NEEDS_PHONE_FALLBACK: SosStatus[] = ['simulated', 'failed', 'no_contacts', 'not_signed_in', 'not_configured', 'queued', 'partial'];
 
+/** Request status: Sent -> Acknowledged -> Response in progress -> Resolved. Updates by itself every few seconds. */
+function RequestPanel({ requestId, debugLinks }: { requestId: string; debugLinks?: string[] }) {
+  const { snapshot, offline, refresh } = useRequestTracker(requestId);
+  const resolved = snapshot?.status === 'resolved';
+  const confirmSafe = () =>
+    Alert.alert('Confirm you are safe?', 'This tells your contacts the request is resolved.', [
+      { text: 'Not yet', style: 'cancel' },
+      { text: 'I am safe', onPress: async () => {
+          try { await resolveMyRequest(requestId); await refresh(); }
+          catch (e) { Alert.alert('Could not update', e instanceof Error ? e.message : 'Unknown error'); }
+      } },
+    ]);
+  return (
+    <View style={styles.panel}>
+      <Text style={styles.panelTitle}>Request status</Text>
+      <RequestTracker snapshot={snapshot} offline={offline} />
+      {!resolved && snapshot?.status !== 'failed' && (
+        <Pressable style={styles.secondary} accessibilityRole="button" onPress={confirmSafe}>
+          <Text style={styles.secondaryText}>I am safe: mark as resolved</Text>
+        </Pressable>
+      )}
+      {debugLinks && debugLinks.length > 0 && (
+        <View style={{ marginTop: 14 }}>
+          <Text style={styles.small}>Demo mode: open a responder link to test the journey yourself.</Text>
+          {debugLinks.map((l, i) => (
+            <Pressable key={l} style={styles.secondary} accessibilityRole="button" onPress={() => Linking.openURL(l)}>
+              <Text style={styles.secondaryText}>Open responder link {i + 1} (demo)</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function SosScreen() {
   const router = useRouter();
   const contacts = useLocalContacts();
-  const { phase, secondsLeft, outcome, cancel, sendNow } = useSosFlow();
+  const { trigger } = useLocalSearchParams<{ trigger?: string }>();
+  const { phase, secondsLeft, outcome, cancel, sendNow } = useSosFlow(trigger === 'shake' ? 'shake' : 'button');
   const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const needsFallback = outcome ? NEEDS_PHONE_FALLBACK.includes(outcome.status) : false;
 
@@ -62,6 +100,8 @@ export default function SosScreen() {
         <>
           <Text style={styles.title}>{RESULT_TEXT[outcome.status]}</Text>
           {outcome.total > 0 && <Text style={styles.sub}>{outcome.delivered} of {outcome.total} accepted by the message provider</Text>}
+
+          {outcome.requestId && <RequestPanel requestId={outcome.requestId} debugLinks={outcome.debugLinks} />}
 
           {needsFallback && (
             <View style={styles.panel}>

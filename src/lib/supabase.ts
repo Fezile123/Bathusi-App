@@ -2,8 +2,12 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+// trim: a stray space/newline or trailing slash in .env is a common reason sign-up "does nothing"
+const url = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').trim().replace(/\/+$/, '');
+const anonKey = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '').trim();
+
+export const supabaseUrl = url;
+export const supabaseAnonKey = anonKey;
 
 /** False until you copy .env.example to .env and fill in your own project values. */
 export const isSupabaseConfigured = url.length > 0 && anonKey.length > 0;

@@ -79,6 +79,7 @@ export default function VaultHome() {
 
       <Text style={styles.h}>Get help</Text>
       <VaultButton title="Send alert to trusted contacts now" onPress={() => router.push('/sos')} />
+      <VaultButton title="My help requests (status)" variant="ghost" onPress={() => router.push('/vault/requests')} />
       <VaultButton title="Support near me (works offline)" variant="ghost" onPress={() => router.push('/vault/directory')} />
 
       <Text style={styles.h}>Record</Text>

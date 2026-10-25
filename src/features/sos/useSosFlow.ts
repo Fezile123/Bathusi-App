@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSettings } from '../../lib/settings';
-import { SosOutcome, sendSos } from './sosService';
+import { SosOutcome, SosTrigger, sendSos } from './sosService';
+import * as Crypto from 'expo-crypto';
 
 export type SosPhase = 'countdown' | 'sending' | 'done' | 'cancelled';
 
 /** Countdown -> send. Cancel is possible only during the countdown. Duplicate starts are ignored. */
-export function useSosFlow() {
+export function useSosFlow(trigger: SosTrigger = 'button') {
   const [phase, setPhase] = useState<SosPhase>('countdown');
   const [secondsLeft, setSecondsLeft] = useState(getSettings().countdownSeconds);
   const [outcome, setOutcome] = useState<SosOutcome | null>(null);
@@ -16,10 +17,10 @@ export function useSosFlow() {
     if (started.current) return;
     started.current = true;
     setPhase('sending');
-    const result = await sendSos();
+    const result = await sendSos(Crypto.randomUUID(), trigger);
     setOutcome(result);
     setPhase('done');
-  }, []);
+  }, [trigger]);
 
   useEffect(() => {
     if (phase !== 'countdown') return;

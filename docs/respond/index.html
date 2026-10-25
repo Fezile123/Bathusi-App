@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Respond</title>
+<style>
+  :root { --bg:#fff7f8; --card:#fff; --ink:#2b2230; --muted:#7a6d80; --line:#f1dde2; --primary:#d94670; --ok:#2e9b6b; --warn:#c98a1b; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1b1620; --card:#251e2b; --ink:#f3eaf5; --muted:#b9acc0; --line:#3a2f42; --primary:#ff7a9d; --ok:#4cc38a; --warn:#e6b04a; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); padding:max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+  main { max-width:480px; margin:0 auto; }
+  h1 { font-size:22px; margin:8px 0 4px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin:14px 0; }
+  .steps { display:flex; gap:6px; margin:6px 0 2px; }
+  .step { flex:1; text-align:center; font-size:12px; color:var(--muted); }
+  .bar { height:6px; border-radius:3px; background:var(--line); margin-bottom:6px; }
+  .step.on .bar { background:var(--ok); } .step.on { color:var(--ink); font-weight:600; }
+  button, a.btn { display:block; width:100%; min-height:52px; margin:10px 0 0; border-radius:14px; border:0; font:600 16px system-ui; text-align:center; text-decoration:none; padding:14px; cursor:pointer; }
+  .primary { background:var(--primary); color:#fff; } .secondary { background:transparent; border:2px solid var(--primary); color:var(--primary); }
+  .danger { background:transparent; border:2px solid var(--line); color:var(--ink); }
+  button[disabled] { opacity:.5; cursor:default; }
+  .err { color:var(--warn); } .done { color:var(--ok); font-weight:600; }
+  dl { margin:0; } dt { color:var(--muted); font-size:13px; margin-top:8px; } dd { margin:0; font-weight:600; word-break:break-word; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Loading…</h1>
+  <p class="muted" id="sub"></p>
+  <div id="app" hidden>
+    <div class="card">
+      <div class="steps" id="steps"></div>
+      <dl>
+        <dt>Who</dt><dd id="who"></dd>
+        <dt>Time</dt><dd id="when"></dd>
+        <dt>Location</dt><dd id="where"></dd>
+      </dl>
+      <a class="btn secondary" id="map" target="_blank" rel="noopener noreferrer" hidden>Open location in Maps</a>
+    </div>
+    <div class="card" id="actions">
+      <p class="muted" style="margin-top:0">Tell the person and the others who are helping what is happening.</p>
+      <button class="primary" data-a="acknowledge" id="b-ack">I have seen this</button>
+      <button class="primary" data-a="on_my_way" id="b-way">I am responding / on my way</button>
+      <button class="secondary" data-a="resolved" id="b-res">Resolved: the person is safe</button>
+      <a class="btn danger" href="tel:10111">Call police (10111)</a>
+      <a class="btn danger" href="tel:112">Call emergency (112)</a>
+    </div>
+    <p class="muted">Only press Resolved if you have confirmed the person is safe. This link stops working after 48 hours.</p>
+  </div>
+</main>
+<script>
+// >>> Your Supabase project's `respond` function. Change this if you ever move to a different Supabase project. <<<
+const API = 'https://lrtfcqwsjmzuegrfmfyg.supabase.co/functions/v1/respond';
+
+const $ = (id) => document.getElementById(id);
+const token = (location.hash.match(/[#&]t=([A-Za-z0-9_-]{20,64})/) || [])[1];
+const LABELS = ['Sent', 'Acknowledged', 'Response in progress', 'Resolved'];
+const RANK = { created: 0, sent: 1, acknowledged: 2, in_progress: 3, resolved: 4 };
+let busy = false;
+
+function fail(msg) { $('title').textContent = 'Link not available'; $('sub').textContent = msg; $('sub').className = 'muted err'; $('app').hidden = true; }
+
+async function call(action) {
+  const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, action }) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+  return data;
+}
+
+function render(d) {
+  $('app').hidden = false;
+  $('title').textContent = d.tier === 'contact' ? 'Someone you know may need help' : 'Someone nearby needs help';
+  $('sub').textContent = d.status === 'resolved' ? 'This request has been marked resolved.' : 'Please read this and respond if it is safe for you to do so.';
+  $('sub').className = 'muted';
+  $('who').textContent = d.who || (d.tier === 'contact' ? 'A person who listed you as a trusted contact' : 'Name not shared');
+  $('when').textContent = new Date(d.created_at).toLocaleString();
+  const has = typeof d.lat === 'number' && typeof d.lng === 'number';
+  $('where').textContent = has ? `${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}${d.accuracy_m > 1000 ? ' (approximate)' : ''}` : 'Location unavailable';
+  const map = $('map'); map.hidden = !has;
+  if (has) map.href = `https://maps.google.com/?q=${d.lat},${d.lng}`;
+
+  const steps = $('steps'); steps.textContent = '';
+  LABELS.forEach((label, i) => {
+    const s = document.createElement('div'); s.className = 'step' + (RANK[d.status] >= i + 1 ? ' on' : '');
+    const b = document.createElement('div'); b.className = 'bar'; s.appendChild(b); s.appendChild(document.createTextNode(label)); steps.appendChild(s);
+  });
+  const resolved = d.status === 'resolved';
+  $('b-ack').disabled = resolved || d.your_status === 'acknowledged' || d.your_status === 'on_my_way';
+  $('b-way').disabled = resolved || d.your_status === 'on_my_way';
+  $('b-res').disabled = resolved;
+}
+
+async function load() { try { render(await call('view')); } catch (e) { fail(e.message); } }
+
+document.querySelectorAll('button[data-a]').forEach((b) => b.addEventListener('click', async () => {
+  if (busy) return;
+  if (b.dataset.a === 'resolved' && !confirm('Confirm: the person is safe and no more help is needed?')) return;
+  busy = true;
+  try { render(await call(b.dataset.a)); } catch (e) { alert(e.message); }
+  busy = false;
+}));
+
+if (!token) fail('This link is incomplete. Please open the full link from the message you received.');
+else { load(); setInterval(load, 10000); }
+</script>
+</body>
+</html>

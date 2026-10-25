@@ -12,3 +12,10 @@ export const SHOW_SETUP_BUTTON = process.env.EXPO_PUBLIC_SHOW_SETUP_BUTTON !== '
 
 /** Loads fictional cycle data once on first launch so the cover looks lived-in. Demo only. */
 export const DEMO_MODE = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+
+/**
+ * Ask for a PIN before opening the vault. OFF by default: "Setup App" (or the 3-second title hold) opens the vault directly.
+ * Set EXPO_PUBLIC_REQUIRE_PIN=true to bring the PIN screen back. Without a PIN, anyone holding an unlocked phone who finds
+ * the Setup button or the hold gesture can open the vault; the vault still re-locks when the app goes to the background.
+ */
+export const REQUIRE_PIN = process.env.EXPO_PUBLIC_REQUIRE_PIN === 'true';

@@ -3,6 +3,9 @@ import * as Location from 'expo-location';
 import { getJson, setJson } from '@/lib/storage';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Loc } from './fallback';
+import type { RequestStatus } from './requestStatus';
+
+export type SosTrigger = 'button' | 'shake';
 
 export const SOS_PENDING_KEY = 'sos_pending_v1';
 
@@ -16,9 +19,20 @@ export type SosStatus =
   | 'not_configured'
   | 'queued';         // no connection: will retry when the app next runs online
 
-export type SosOutcome = { status: SosStatus; delivered: number; total: number; eventId: string; message?: string; location: Loc };
+export type SosOutcome = {
+  status: SosStatus;
+  delivered: number;
+  total: number;
+  eventId: string;
+  message?: string;
+  location: Loc;
+  requestId?: string;           // the server's id for this request: used to track Sent -> Acknowledged -> ...
+  requestStatus?: RequestStatus;
+  pathway?: string;             // which route the server chose (contacts_only, contacts_and_responders, ...)
+  debugLinks?: string[];        // demo mode only: responder links you can open yourself to test the journey
+};
 
-type Pending = { clientEventId: string; lat: number | null; lng: number | null; accuracy: number | null; at: number };
+type Pending = { clientEventId: string; lat: number | null; lng: number | null; accuracy: number | null; at: number; trigger?: SosTrigger };
 
 /** Asks for location permission if needed (first alert), then gets a fix with a timeout. */
 export async function getLocation(): Promise<{ lat: number; lng: number; accuracy: number | null } | null> {
@@ -36,16 +50,21 @@ export async function getLocation(): Promise<{ lat: number; lng: number; accurac
   }
 }
 
-async function callServer(p: Pending): Promise<{ status: SosStatus; delivered: number; total: number; message?: string }> {
+type ServerReply = {
+  status: SosStatus; delivered: number; total: number; message?: string;
+  requestId?: string; requestStatus?: RequestStatus; routing?: { pathway: string }; debugLinks?: string[];
+};
+
+async function callServer(p: Pending): Promise<ServerReply> {
   const { data, error } = await supabase.functions.invoke('send-sos', {
-    body: { clientEventId: p.clientEventId, lat: p.lat, lng: p.lng, accuracyM: p.accuracy },
+    body: { clientEventId: p.clientEventId, lat: p.lat, lng: p.lng, accuracyM: p.accuracy, trigger: p.trigger ?? 'button' },
   });
   if (error) throw error; // network/server error -> caller queues for retry
-  return data as { status: SosStatus; delivered: number; total: number; message?: string };
+  return data as ServerReply;
 }
 
 /** Sends one SOS. The same clientEventId is safe to retry: the server de-duplicates it. */
-export async function sendSos(clientEventId: string = Crypto.randomUUID()): Promise<SosOutcome> {
+export async function sendSos(clientEventId: string = Crypto.randomUUID(), trigger: SosTrigger = 'button'): Promise<SosOutcome> {
   const loc = await getLocation();
   const location: Loc = loc ? { lat: loc.lat, lng: loc.lng } : null;
   const base = { delivered: 0, total: 0, eventId: clientEventId, location };
@@ -60,10 +79,12 @@ export async function sendSos(clientEventId: string = Crypto.randomUUID()): Prom
     lng: loc?.lng ?? null,
     accuracy: loc?.accuracy ?? null,
     at: Date.now(),
+    trigger,
   };
   try {
     const r = await callServer(pending);
-    return { ...base, ...r };
+    const { routing, ...rest } = r;
+    return { ...base, ...rest, pathway: routing?.pathway };
   } catch {
     const q = await getJson<Pending[]>(SOS_PENDING_KEY, []);
     await setJson(SOS_PENDING_KEY, [...q.filter((x) => x.clientEventId !== clientEventId), pending]);
