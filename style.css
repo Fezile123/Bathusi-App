@@ -1,0 +1,585 @@
+/* ==========================================================================
+   1. Android Viewport Layout Foundations & Reset Definitions
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0f0b0b; /* Emulates a modern desktop preview backdrop context frame */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Device Shell Simulator Layout Wrapper */
+.android-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 412px;  /* Native Pixel/Android standard device width dimension scale */
+  max-height: 892px; /* Native Android long display ratio viewport scale */
+  background-color: #fdf8f7; /* Soft aesthetic background workspace tint from design inputs */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  border: 8px solid #251d1c;
+  border-radius: 40px;
+}
+
+/* Strips phone shell borders natively if loaded directly onto true mobile browser layouts */
+@media (max-width: 480px) {
+  .android-wrapper {
+    max-width: 100%;
+    max-height: 100%;
+    border: none;
+    border-radius: 0;
+  }
+}
+
+/* ==========================================================================
+   2. Core Application Top Navigation Bar Header Component
+   ========================================================================== */
+.app-header-bar {
+  height: 64px;
+  width: 100%;
+  padding: 0 1.25rem;
+  background-color: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.brand-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #b73e55; /* Muted corporate berry wine brand color */
+  letter-spacing: -0.5px;
+}
+
+.action-pill-btn {
+  background-color: #b73e55;
+  color: #ffffff;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.45rem 1.1rem;
+  border-radius: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(183, 62, 85, 0.2);
+}
+
+/* ==========================================================================
+   3. Independent App Content Scroll Zone Layout Portal
+   ========================================================================== */
+.scrollable-screen-viewport {
+  flex-grow: 1;
+  width: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 1.25rem 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Removes standard scrollbar lines for cleaner smartphone viewport emulation layout */
+.scrollable-screen-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.greeting-container {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.current-date-lbl {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8c7674;
+}
+
+.heading-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #2d2221;
+  letter-spacing: -0.5px;
+  margin-top: 0.15rem;
+}
+
+.status-marker-pill {
+  font-size: 0.85rem;
+  color: #8c7674;
+  font-weight: 500;
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-dot {
+  color: #d8a473; /* Earthy amber alert color */
+  font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   4. Hero Cycle Tracker Metric Radial Rings & Card Components
+   ========================================================================== */
+.hero-cycle-card {
+  background-color: #ffffff;
+  border-radius: 28px;
+  padding: 2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 24px rgba(183, 62, 85, 0.02);
+  border: 1px solid rgba(242, 230, 228, 0.6);
+}
+
+.radial-ring-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.radial-ring-progress {
+  width: 175px;
+  height: 175px;
+  border-radius: 50%;
+  /* Replicates the gradient ring layout system with distinct sequence color arrays */
+  background: conic-gradient(
+    #b73e55 0% 18%, 
+    #d8a473 18% 45%, 
+    #7a528a 45% 75%, 
+    #e8dbd9 75% 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radial-ring-inner {
+  width: 143px;
+  height: 143px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.metrics-main {
+  font-size: 3.2rem;
+  font-weight: 900;
+  color: #2d2221;
+  line-height: 1;
+}
+
+.metrics-sub {
+  font-size: 0.75rem;
+  color: #a68f8d;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.75px;
+}
+
+/* Multi-Phase Color Legends Row */
+.phase-legend-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.legend-item {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8c7674;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.legend-dot { font-size: 0.85rem; line-height: 1; }
+.color-period { color: #b73e55; }
+.color-follicular { color: #d8a473; }
+.color-fertile { color: #7a528a; }
+.color-luteal { color: #e8dbd9; }
+
+/* Active Center Information Banner Items */
+.active-focus-badge {
+  background-color: #f4eff9; /* Light lavender purple backdrop tint */
+  color: #7a528a;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.4rem 1.25rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1.25rem;
+  border: 1px solid rgba(122, 82, 138, 0.1);
+}
+
+.phase-insights-summary {
+  text-align: center;
+  max-width: 280px;
+}
+
+.phase-insights-summary h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2d2221;
+  margin-bottom: 0.4rem;
+}
+
+.summary-paragraph {
+  font-size: 0.85rem;
+  color: #4a3e3d;
+  line-height: 1.45;
+  margin-bottom: 0.65rem;
+}
+
+.disclaimer-paragraph {
+  font-size: 0.75rem;
+  color: #a68f8d;
+  line-height: 1.35;
+}
+
+/* ==========================================================================
+   5. Standardized Reusable Android Card Containers
+   ========================================================================== */
+.material-content-card {
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 1.25rem 1.25rem;
+  border: 1px solid rgba(242, 230, 228, 0.6);
+  box-shadow: 0 4px 16px rgba(45, 34, 33, 0.01);
+}
+
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-section-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #2d2221;
+  letter-spacing: -0.25px;
+}
+
+.card-sub-instructions {
+  font-size: 0.85rem;
+  color: #8c7674;
+  margin: -0.25rem 0 1.1rem 0;
+}
+
+.accent-link-action {
+  font-size: 0.85rem;
+  color: #b73e55;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Horizontal Calendar Grid Modules */
+.calendar-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.calendar-day-node {
+  background-color: #fffbfa;
+  border: 1px solid #f8eee3;
+  padding: 0.75rem 0.2rem;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.calendar-day-node span { font-size: 0.7rem; color: #a68f8d; font-weight: 700; text-transform: uppercase; }
+.calendar-day-node strong { font-size: 0.95rem; color: #4a3e3d; font-weight: 700; }
+.calendar-day-node .dot-marker { font-size: 0.65rem; color: #b73e55; line-height: 1; margin-top: -0.15rem; }
+.calendar-day-node .invisible { opacity: 0; }
+
+.calendar-day-node.selected-android-day {
+  background-color: #b73e55;
+  border-color: #b73e55;
+  box-shadow: 0 4px 12px rgba(183, 62, 85, 0.25);
+}
+.calendar-day-node.selected-android-day span { color: rgba(255, 255, 255, 0.75); }
+.calendar-day-node.selected-android-day strong,
+.calendar-day-node.selected-android-day .dot-marker { color: #ffffff; }
+
+/* Grid Tag chip sets */
+.chips-assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 360px) {
+  .chips-assessment-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.symptom-tag-chip {
+  background-color: #ffffff;
+  border: 1px solid #f0e4e2;
+  padding: 0.75rem 0.25rem;
+  border-radius: 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4a3e3d;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.symptom-tag-chip.selected-chip {
+  background-color: #fff0f2;
+  border-color: #ffccd5;
+  color: #b73e55;
+  box-shadow: inset 0 0 0 1px rgba(183, 62, 85, 0.15);
+}
+
+/* ==========================================================================
+   6. Custom Specialized Android Interactive Component Button Classes
+   ========================================================================== */
+.android-solid-btn {
+  width: 100%;
+  background-color: #b73e55;
+  color: #ffffff;
+  border: none;
+  padding: 0.95rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(183, 62, 85, 0.2);
+  transition: opacity 0.2s;
+}
+.android-solid-btn:hover { opacity: 0.9; }
+
+/* Fast Log Override Action Banners */
+.pink-action-banner-card {
+  background-color: #fff2f3;
+  border: 1px solid #ffccd5;
+  border-radius: 24px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.action-banner-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #b73e55;
+  margin-bottom: 0.35rem;
+}
+
+.action-banner-body {
+  font-size: 0.85rem;
+  color: #8c7674;
+  line-height: 1.45;
+  margin-bottom: 1.25rem;
+}
+
+.android-outlined-btn {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #b73e55;
+  color: #b73e55;
+  padding: 0.85rem;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.android-outlined-btn:hover { background-color: #fff5f6; }
+
+/* ==========================================================================
+   1. Projections Timeline Section Styles
+   ========================================================================== */
+/* Layout modifiers to remove outer borders and make the card transparent */
+.borderless-card { 
+  border: none !important; 
+  box-shadow: none !important; 
+}
+
+.transparent-bg { 
+  background: transparent !important; 
+  padding-left: 0 !important; 
+  padding-right: 0 !important; 
+}
+
+.card-section-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #2d2221;
+  margin-bottom: 0.5rem;
+}
+
+/* Timeline Rows Layout Matrix */
+.timeline-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #fdf5f4; /* Light clean separation divider line */
+}
+
+.timeline-left-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+/* Icon Box Containers */
+.timeline-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.bg-tint-pink { 
+  background-color: #fff2f3; 
+}
+
+.bg-tint-purple { 
+  background-color: #f4eff9; 
+}
+
+/* Text Meta Block Layouts */
+.timeline-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.timeline-main-lbl { 
+  font-size: 0.95rem; 
+  font-weight: 700; 
+  color: #2d2221; 
+}
+
+.timeline-sub-lbl { 
+  font-size: 0.8rem; 
+  color: #8c7674; 
+}
+
+/* Android Action Status Right-Side Pills */
+.android-status-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge-tint-pink { 
+  color: #b73e55; 
+  background-color: #fff2f3; 
+}
+
+.badge-tint-purple { 
+  color: #7a528a; 
+  background-color: #f4eff9; 
+}
+
+/* Section Footer Text Lines */
+.accuracy-notice-footer {
+  font-size: 0.75rem;
+  color: #a68f8d;
+  text-align: center;
+  margin-top: 1.5rem;
+  line-height: 1.4;
+}
+
+.encryption-lock-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8c7674;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+/* ==========================================================================
+   2. Fixed Bottom Android Navigation Bar Styles
+   ========================================================================== */
+.android-bottom-nav {
+  height: 72px;
+  width: 100%;
+  background-color: #ffffff;
+  border-top: 1px solid #f2e6e4;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Divides into exactly 4 equal widths */
+  flex-shrink: 0; /* Prevents viewport container from squishing the tab bar */
+  padding-bottom: max(6px, env(safe-area-inset-bottom)); /* Safe spacing boundary */
+  z-index: 10;
+}
+
+.nav-tab-item {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: #a68f8d;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  transition: color 0.2s ease;
+}
+
+.nav-tab-icon {
+  font-size: 1.35rem;
+  opacity: 0.6;
+  transition: transform 0.2s, opacity 0.2s;
+  line-height: 1;
+}
+
+.nav-tab-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  white-space: nowrap; /* Forces text to remain on a single line */
+}
+
+/* Active Selection States Highlight Modifiers */
+.nav-tab-item.active {
+  color: #b73e55; /* Changes tab theme color to brand color */
+}
+
+.nav-tab-item.active .nav-tab-icon {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.05); /* Soft bounce animation indicator */
+}
