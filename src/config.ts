@@ -1,7 +1,7 @@
 // Disguise settings. Read at build time from .env (restart with `npx expo start -c` after changing).
 
-/** The name shown on the cover app. Blueprint default is "FloLog". Set EXPO_PUBLIC_DISGUISE_NAME=Mothusi to show that instead. */
-export const DISGUISE_NAME = process.env.EXPO_PUBLIC_DISGUISE_NAME || 'FloLog';
+/** The name shown on the cover app. Default is "Mothusi". Set EXPO_PUBLIC_DISGUISE_NAME=FloLog to use the cycle-tracker disguise name instead. */
+export const DISGUISE_NAME = process.env.EXPO_PUBLIC_DISGUISE_NAME || 'Mothusi';
 
 /**
  * Shows the visible "Setup App" button on the cover screen (handy for demos and judging).

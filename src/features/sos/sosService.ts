@@ -1,27 +1,30 @@
 import * as Crypto from 'expo-crypto';
 import * as Location from 'expo-location';
-import { getJson, setJson } from '../../lib/storage';
-import { isSupabaseConfigured, supabase } from '../../lib/supabase';
+import { getJson, setJson } from '@/lib/storage';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { Loc } from './fallback';
 
 export const SOS_PENDING_KEY = 'sos_pending_v1';
 
 export type SosStatus =
   | 'sent'            // provider accepted every message (NOT proof the phone received it)
   | 'partial'
-  | 'simulated'       // server ran in simulate mode: no real SMS was sent
+  | 'simulated'       // server is in simulate mode: no real SMS was sent
   | 'failed'
   | 'no_contacts'
   | 'not_signed_in'
   | 'not_configured'
   | 'queued';         // no connection: will retry when the app next runs online
 
-export type SosOutcome = { status: SosStatus; delivered: number; total: number; eventId: string; message?: string };
+export type SosOutcome = { status: SosStatus; delivered: number; total: number; eventId: string; message?: string; location: Loc };
 
 type Pending = { clientEventId: string; lat: number | null; lng: number | null; accuracy: number | null; at: number };
 
-async function getLocation(): Promise<{ lat: number; lng: number; accuracy: number | null } | null> {
+/** Asks for location permission if needed (first alert), then gets a fix with a timeout. */
+export async function getLocation(): Promise<{ lat: number; lng: number; accuracy: number | null } | null> {
   try {
-    const perm = await Location.getForegroundPermissionsAsync();
+    let perm = await Location.getForegroundPermissionsAsync();
+    if (!perm.granted && perm.canAskAgain) perm = await Location.requestForegroundPermissionsAsync();
     if (!perm.granted) return null;
     const timeout = new Promise<null>((r) => setTimeout(() => r(null), 8000));
     const fix = await Promise.race([Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }), timeout]);
@@ -33,23 +36,24 @@ async function getLocation(): Promise<{ lat: number; lng: number; accuracy: numb
   }
 }
 
-async function callServer(p: Pending): Promise<SosOutcome> {
+async function callServer(p: Pending): Promise<{ status: SosStatus; delivered: number; total: number; message?: string }> {
   const { data, error } = await supabase.functions.invoke('send-sos', {
     body: { clientEventId: p.clientEventId, lat: p.lat, lng: p.lng, accuracyM: p.accuracy },
   });
   if (error) throw error; // network/server error -> caller queues for retry
-  const d = data as { status: SosStatus; delivered: number; total: number; message?: string };
-  return { status: d.status, delivered: d.delivered, total: d.total, message: d.message, eventId: p.clientEventId };
+  return data as { status: SosStatus; delivered: number; total: number; message?: string };
 }
 
 /** Sends one SOS. The same clientEventId is safe to retry: the server de-duplicates it. */
 export async function sendSos(clientEventId: string = Crypto.randomUUID()): Promise<SosOutcome> {
-  const base = { delivered: 0, total: 0, eventId: clientEventId };
+  const loc = await getLocation();
+  const location: Loc = loc ? { lat: loc.lat, lng: loc.lng } : null;
+  const base = { delivered: 0, total: 0, eventId: clientEventId, location };
+
   if (!isSupabaseConfigured) return { ...base, status: 'not_configured' };
   const { data } = await supabase.auth.getSession();
   if (!data.session) return { ...base, status: 'not_signed_in' };
 
-  const loc = await getLocation();
   const pending: Pending = {
     clientEventId,
     lat: loc?.lat ?? null,
@@ -58,7 +62,8 @@ export async function sendSos(clientEventId: string = Crypto.randomUUID()): Prom
     at: Date.now(),
   };
   try {
-    return await callServer(pending);
+    const r = await callServer(pending);
+    return { ...base, ...r };
   } catch {
     const q = await getJson<Pending[]>(SOS_PENDING_KEY, []);
     await setJson(SOS_PENDING_KEY, [...q.filter((x) => x.clientEventId !== clientEventId), pending]);

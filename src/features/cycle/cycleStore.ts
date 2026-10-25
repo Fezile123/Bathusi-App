@@ -50,6 +50,17 @@ export function useCycleData() {
     setSymptoms(next);
   }, []);
 
+  /** Replaces today's symptom list with exactly `names` (empty list clears today). */
+  const saveTodaySymptoms = useCallback(async (names: string[]) => {
+    const today = toIso(new Date());
+    const current = await getJson<SymptomLog[]>(K_SYMPTOMS, []);
+    const kept = current.filter((s) => s.date !== today);
+    const added = names.map((symptom) => ({ id: Crypto.randomUUID(), date: today, symptom, severity: 2 as const }));
+    const next = [...kept, ...added];
+    await setJson(K_SYMPTOMS, next);
+    setSymptoms(next);
+  }, []);
+
   const clearAll = useCallback(async () => {
     await removeKeys([K_LOGS, K_SYMPTOMS]);
     setLogs([]);
@@ -65,5 +76,5 @@ export function useCycleData() {
     setLogs(demo);
   }, []);
 
-  return { logs, symptoms, loading, reload, logPeriodStart, addSymptom, clearAll, loadDemoData };
+  return { logs, symptoms, loading, reload, logPeriodStart, addSymptom, saveTodaySymptoms, clearAll, loadDemoData };
 }

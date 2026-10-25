@@ -1,41 +1,57 @@
-<<<<<<< HEAD
-# Mothusi / FloLog: full prototype source (all milestones, all members)
+# Mothusi: discreet safety app
 
-Everything here is **UNTESTED on real devices**. It was written without being able to run Expo or Supabase.
-Expect small fixes on first run, and send me any error text. See `TEST-PLAN.md`.
+On the surface Mothusi looks like a cycle tracker. Behind it is a PIN-protected safety vault, and **shaking the phone asks for help**.
 
-## Run it
-1. `bash setup.sh`  (creates the Expo project `../mothusi`, installs packages, copies these files)
-2. `cd ../mothusi && npx expo start`, scan the QR code with Expo Go on a **physical phone**.
-3. FloLog works immediately (cycle tracker, offline directory, vault, PIN, shake test). Cloud features need step 4.
+> Status: prototype. **Not yet tested on real devices.** Read `docs/SECURITY-NOTES.md` and `docs/BLUEPRINT-CORRECTIONS.md` before presenting, and `docs/TEST-PLAN.md` before demoing.
 
-## Connect Supabase (needed for contacts, SOS, evidence upload)
-1. Create a free project at supabase.com. **Free projects pause after about a week idle: open the dashboard the day before judging.**
-2. SQL Editor: run `supabase/migrations/001_schema.sql`, then `002_storage.sql`.
-3. Authentication > Providers: enable Email (turn off "Confirm email" for the hackathon) and, optionally, Anonymous sign-ins.
-4. Project Settings > API: copy the Project URL and anon key into `.env` (see `.env.example`).
-5. Deploy the alert function (needs the Supabase CLI): `supabase login`, `supabase link --project-ref <ref>`, `supabase functions deploy send-sos`.
-   It runs in **simulate mode by default** (`SMS_PROVIDER=simulate`): no real SMS is sent and the app says so.
-6. Run `supabase/tests/rls_test.md` to prove users cannot read each other's data.
+## Run it (Android, Expo Go)
+```bash
+npm install
+npx expo install react-native-svg expo-sms     # two packages added in this version
+copy .env.example .env                         # Mac/Linux: cp .env.example .env
+npx expo start -c
+```
+Scan the QR code with **Expo Go** (same Wi-Fi, or add `--tunnel`). Run `npm run typecheck` and send me any errors.
 
-## Using the app
-- Hold the **FloLog** title for 3 seconds. First time: you create your own PIN (4-8 digits). No PIN is built in.
-- Vault: Account, Trusted contacts (consent required, max 3), Evidence, Support near me, Shake alert toggle, Delete everything.
+## What works with NO account and NO internet
+- Cycle tracker: ring, week strip, symptoms, period logging, calendar, insights (data stays on the phone)
+- Vault: hold the title **3 seconds** (or tap *Setup App*), create your own PIN
+- Trusted contacts (up to 3, saved on the phone) and **shake-for-help**
+- On shake: 10-second cancel screen, then buttons to **message your contacts** (your SMS app opens pre-filled with your location, you tap Send), **call 10111 / 112 / GBV Command Centre**
+- Offline support directory (sample entries: replace with verified data)
 
-## Who owns what (from the blueprint)
-| Member | Milestone | Files |
-|---|---|---|
-| 1 Sensors/Cloud | M1 repo + Supabase + incidents table with RLS | `supabase/migrations/*`, `src/lib/supabase.ts` |
-| | M2 accelerometer hook | `src/features/sos/useShakeDetector.ts` (+ `app/spike-shake.tsx` to tune) |
-| | M3 screen protection + upload loop | `app/vault/_layout.tsx` (screen capture block), `src/features/evidence/evidenceQueue.ts`, `src/features/sos/*`, `supabase/functions/send-sos` |
-| 2 Directory | M1 registry | `src/data/tccRegistry.json` (SAMPLE entries: replace with verified data) |
-| | M2 Haversine | `src/features/directory/distanceCalc.ts` |
-| | M3 list UI | `src/features/directory/ResourceList.tsx`, `app/vault/directory.tsx` |
-| 3 UI/State | M1 security context | `src/features/vault/SecurityContext.tsx` |
-| | M2 dashboard + 3 s gesture | `app/(tabs)/*`, `src/features/cycle/*`, `src/components/GateHeader.tsx`, `src/features/vault/useLongPressGate.ts` |
-| | M3 vault UI + purge | `app/vault/*`, `app/unlock.tsx`, `src/features/vault/purge.ts` |
+## What needs setup (see `docs/API-SETUP.md`)
+| Feature | Needs |
+|---|---|
+| Alert sent for you by the server | Supabase project + an SMS provider (Twilio adapter included) |
+| Evidence upload (photo, audio, notes) | Supabase project + sign-in |
+| Real nearby facilities | A verified dataset in `src/data/tccRegistry.json` |
 
-Read `BLUEPRINT-CORRECTIONS.md` and `SECURITY-NOTES.md` before the pitch.
-=======
-# Bathusi-App
->>>>>>> b234d99ccaedb38f169e12dbfc5d883a5e30dbe2
+## Honest limits
+- Shake works **while the app is open on screen**. It does not work when the app is closed or the phone is locked. Making that work needs a native Android foreground service (development build) and real-device testing.
+- An SMS from the phone is **not silent**: the user must tap Send. Server SMS can be silent but needs the setup above.
+- No app can guarantee safety. The vault disguise lowers risk; it does not remove it.
+
+## Project structure
+```
+src/
+  app/            screens (Expo Router): (tabs)/ cover app, vault/, unlock, auth, sos
+  components/     CycleRing, WeekStrip, Keypad, GateHeader, SetupAppButton, VaultButton
+  features/
+    cycle/        cycle maths and storage (on-device only)
+    sos/          shake detector, SOS flow, contacts, phone fallback
+    vault/        PIN, lock/session context, purge, account deletion
+    evidence/     upload queue (verifies storage before removing local copy)
+    directory/    Haversine distance + resource list
+  lib/            supabase client, settings, storage
+  data/           tccRegistry.json (SAMPLE data)
+  config.ts       disguise name, demo flags
+  theme.ts        colours (from the original style.css)
+supabase/         SQL migrations, send-sos edge function, RLS test guide
+docs/             API setup, security notes, test plan, original index.html/style.css
+assets/images/    app icons (generated placeholder: replace with your own)
+```
+Older notes in `docs/` may mention `app/...`; routes now live in `src/app/...`.
+
+## Config (`.env`)
+`EXPO_PUBLIC_DISGUISE_NAME`, `EXPO_PUBLIC_SHOW_SETUP_BUTTON` (set `false` for real use), `EXPO_PUBLIC_DEMO_MODE` (fictional data, demos only), Supabase URL and anon key.

@@ -1,18 +1,20 @@
 {
   "expo": {
-    "name": "mothusi",
+    "name": "Mothusi",
     "slug": "mothusi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mothusi",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.example.mothusi",
+      "supportsTablet": false
     },
     "android": {
+      "package": "com.example.mothusi",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#B73E55",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -20,7 +22,6 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -28,13 +29,15 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#B73E55",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ],
       "expo-secure-store",
-      "expo-audio"
+      ["expo-audio", { "microphonePermission": "Mothusi uses the microphone only when you choose to record audio." }],
+      ["expo-image-picker", { "cameraPermission": "Mothusi uses the camera only when you choose to take a photo." }],
+      ["expo-location", { "locationWhenInUsePermission": "Mothusi uses your location to find nearby support and to include where you are if you send an alert." }]
     ],
     "experiments": {
       "typedRoutes": true,

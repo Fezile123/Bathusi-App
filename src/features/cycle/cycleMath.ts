@@ -148,6 +148,92 @@ export function classifyDay(day: Date, windows: DayWindow[]): DayClass {
   return null;
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const WEEKDAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** "Nov 9" */
 export function formatShort(d: Date): string {
-  return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+/** "Sunday, 25 October" */
+export function formatLong(d: Date): string {
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()]}`;
+}
+
+export function greetingFor(d: Date): string {
+  const h = d.getHours();
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+}
+
+// ---------- phases (for the ring and the summary text) ----------
+export type Phase = 'period' | 'follicular' | 'fertile' | 'luteal';
+
+export type PhaseLayout = {
+  cycleLength: number;
+  periodLength: number;
+  ovulationDay: number;   // 1-based cycle day
+  fertileStartDay: number;
+  fertileEndDay: number;
+};
+
+export function phaseLayout(cycleLength: number, periodLength: number): PhaseLayout {
+  const ovulationDay = Math.max(periodLength + 2, cycleLength - 13);
+  const fertileStartDay = Math.max(periodLength + 1, ovulationDay - 5);
+  const fertileEndDay = Math.min(cycleLength, ovulationDay + 1);
+  return { cycleLength, periodLength, ovulationDay, fertileStartDay, fertileEndDay };
+}
+
+export function phaseForDay(day: number, l: PhaseLayout): Phase {
+  if (day <= l.periodLength) return 'period';
+  if (day < l.fertileStartDay) return 'follicular';
+  if (day <= l.fertileEndDay) return 'fertile';
+  return 'luteal';
+}
+
+/** Fractions of the ring (sum = 1): period, follicular, fertile, luteal. */
+export function ringFractions(l: PhaseLayout): Record<Phase, number> {
+  const period = l.periodLength;
+  const follicular = Math.max(0, l.fertileStartDay - 1 - l.periodLength);
+  const fertile = l.fertileEndDay - l.fertileStartDay + 1;
+  const luteal = Math.max(0, l.cycleLength - l.fertileEndDay);
+  const total = period + follicular + fertile + luteal;
+  return { period: period / total, follicular: follicular / total, fertile: fertile / total, luteal: luteal / total };
+}
+
+export type TodaySummary = { phase: Phase; title: string; text: string; badge: string | null };
+
+export function describeToday(p: CyclePrediction): TodaySummary {
+  const l = phaseLayout(p.avgCycleLength, p.periodLength);
+  const phase = phaseForDay(Math.min(p.cycleDay, l.cycleLength), l);
+  const nextPeriod = p.projections.find((x) => x.kind === 'period');
+  const days = nextPeriod ? nextPeriod.daysAway : null;
+
+  if (phase === 'period') {
+    return { phase, title: 'Period', text: `Estimated day ${p.cycleDay} of about ${l.periodLength} period days.`, badge: null };
+  }
+  if (phase === 'fertile') {
+    const i = p.cycleDay - l.fertileStartDay + 1;
+    const n = l.fertileEndDay - l.fertileStartDay + 1;
+    const peak = p.cycleDay === l.ovulationDay;
+    return {
+      phase,
+      title: peak ? 'Peak fertility' : 'Fertile window',
+      text: peak
+        ? 'Ovulation is likely today, and your fertile window ends tomorrow.'
+        : `Your estimated fertile window is open (day ${i} of ${n}).`,
+      badge: `Fertile window \u2022 day ${i} of ${n}`,
+    };
+  }
+  if (phase === 'follicular') {
+    return { phase, title: 'Follicular phase', text: 'Estimated days between your period and your fertile window.', badge: null };
+  }
+  return {
+    phase,
+    title: 'Luteal phase',
+    text: days !== null ? `Your next period is expected in about ${days} day${days === 1 ? '' : 's'}.` : 'Your next period is expected soon.',
+    badge: null,
+  };
 }

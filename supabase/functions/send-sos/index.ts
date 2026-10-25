@@ -1,7 +1,8 @@
 // Supabase Edge Function: send-sos
 // Deploy:  supabase functions deploy send-sos
-// Secrets: supabase secrets set SMS_PROVIDER=simulate     (default; sends nothing)
-//          (for a real provider add its keys here, NEVER in the mobile app)
+// Secrets (never put these in the mobile app):
+//   supabase secrets set SMS_PROVIDER=simulate            (default: sends nothing)
+//   supabase secrets set SMS_PROVIDER=twilio TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=... TWILIO_FROM=+1...
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -15,15 +16,36 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type SendResult = { ok: boolean; ref?: string; error?: string; simulated?: boolean };
 
+async function sendTwilio(to: string, text: string): Promise<SendResult> {
+  const sid = Deno.env.get("TWILIO_ACCOUNT_SID");
+  const token = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const from = Deno.env.get("TWILIO_FROM");
+  const service = Deno.env.get("TWILIO_MESSAGING_SERVICE_SID");
+  if (!sid || !token || (!from && !service)) return { ok: false, error: "Twilio secrets are missing" };
+
+  const form = new URLSearchParams({ To: to, Body: text });
+  if (service) form.set("MessagingServiceSid", service);
+  else form.set("From", from!);
+
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    method: "POST",
+    headers: { Authorization: "Basic " + btoa(`${sid}:${token}`), "Content-Type": "application/x-www-form-urlencoded" },
+    body: form,
+  });
+  const j = await res.json().catch(() => ({}));
+  // 201 = Twilio ACCEPTED the message for sending. It is not proof the phone received it.
+  if (res.ok) return { ok: true, ref: j.sid };
+  return { ok: false, error: `Twilio ${res.status}: ${j.message ?? "request failed"}` };
+}
+
 async function sendSms(to: string, text: string): Promise<SendResult> {
   const provider = Deno.env.get("SMS_PROVIDER") ?? "simulate";
   if (provider === "simulate") {
     console.log(`[simulate] SMS to ***${to.slice(-3)} (${text.length} chars)`); // never log full numbers/locations
     return { ok: true, ref: "simulated", simulated: true };
   }
-  // TODO(team): implement ONE real provider here after comparing official pricing/docs
-  // (e.g. a South African SMS gateway). Read credentials from Deno.env.get(...).
-  // Return { ok: true, ref: <provider message id> } only when the provider ACCEPTS the message.
+  if (provider === "twilio") return sendTwilio(to, text);
+  // To add another provider (e.g. a South African gateway): write sendXxx() like sendTwilio and route it here.
   return { ok: false, error: `SMS provider "${provider}" is not implemented` };
 }
 
