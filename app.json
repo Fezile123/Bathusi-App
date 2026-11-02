@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Mothusi",
+    "name": "FloLog",
     "slug": "mothusi",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,11 +8,11 @@
     "scheme": "mothusi",
     "userInterfaceStyle": "light",
     "ios": {
-      "bundleIdentifier": "com.example.mothusi",
+      "bundleIdentifier": "com.fezile.flolog",
       "supportsTablet": false
     },
     "android": {
-      "package": "com.example.mothusi",
+      "package": "com.fezile.flolog",
       "adaptiveIcon": {
         "backgroundColor": "#B73E55",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -35,9 +35,9 @@
         }
       ],
       "expo-secure-store",
-      ["expo-audio", { "microphonePermission": "Mothusi uses the microphone only when you choose to record audio." }],
-      ["expo-image-picker", { "cameraPermission": "Mothusi uses the camera only when you choose to take a photo." }],
-      ["expo-location", { "locationWhenInUsePermission": "Mothusi uses your location to find nearby support and to include where you are if you send an alert." }]
+      ["expo-audio", { "microphonePermission": "FloLog uses the microphone only when you choose to record audio." }],
+      ["expo-image-picker", { "cameraPermission": "FloLog uses the camera only when you choose to take a photo." }],
+      ["expo-location", { "locationWhenInUsePermission": "FloLog uses your location to find nearby support and to include where you are if you send an alert." }]
     ],
     "experiments": {
       "typedRoutes": true,
