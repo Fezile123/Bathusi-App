@@ -2,9 +2,19 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
-// trim: a stray space/newline or trailing slash in .env is a common reason sign-up "does nothing"
-const url = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').trim().replace(/\/+$/, '');
-const anonKey = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '').trim();
+import { FALLBACK_SUPABASE_ANON_KEY, FALLBACK_SUPABASE_URL } from './supabaseConfig';
+
+// Order: .env / build settings first, then the built-in file src/lib/supabaseConfig.ts.
+// trim: a stray space/newline or trailing slash is a common reason sign-up "does nothing"
+const clean = (v: string | undefined) => (v ?? '').trim().replace(/\/+$/, '');
+const envUrl = clean(process.env.EXPO_PUBLIC_SUPABASE_URL);
+const envKey = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '').trim();
+const url = envUrl || clean(FALLBACK_SUPABASE_URL);
+const anonKey = envKey || FALLBACK_SUPABASE_ANON_KEY.trim();
+
+/** Where the settings came from: shown on the Account screen to make problems easy to spot. */
+export const configSource: 'env' | 'built-in file' | 'mixed' | 'missing' =
+  envUrl && envKey ? 'env' : !envUrl && !envKey ? (url && anonKey ? 'built-in file' : 'missing') : 'mixed';
 
 export const supabaseUrl = url;
 export const supabaseAnonKey = anonKey;

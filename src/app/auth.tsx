@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { VaultButton } from '@/components/VaultButton';
-import { isSupabaseConfigured, supabase, supabaseAnonKey, supabaseUrl } from '@/lib/supabase';
+import { configSource, isSupabaseConfigured, supabase, supabaseAnonKey, supabaseUrl } from '@/lib/supabase';
 import { useSecurity } from '@/features/vault/SecurityContext';
 import { syncContacts } from '@/features/sos/contactsStore';
 import { colors } from '@/theme';
 
 const NOT_CONFIGURED =
-  'The app cannot see your Supabase settings.\n\n1. The file must be named .env (not .env.txt) and sit next to package.json.\n2. It needs EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.\n3. Stop the server and run: npx expo start -c';
+  'The app does not have your Supabase URL and public key.\n\nOpen src/lib/supabaseConfig.ts and make sure both values are filled in (the key must start with eyJ or sb_publishable_), then restart with: npx expo start -c\n\nFor an installed APK, rebuild it after changing the file.';
 
 /** Turns raw Supabase errors into something a person can act on. */
 function explain(message: string): string {
@@ -57,7 +57,7 @@ export default function Auth() {
   const cleanEmail = email.replace(/\s+/g, '').toLowerCase();
   const checkInputs = (): boolean => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(cleanEmail)) {
-      Alert.alert('Check your email', `The app read: "${email}"\n\nIt must look like name@gmail.com: one @, then a dot and an ending such as .com or .co.za.`);
+      Alert.alert('Check your email', `The app read: "${email}" (${email.length} characters)\n\nType the address on the keyboard (do not use the autofill suggestion). It must look like name@gmail.com: one @, then a dot and an ending such as .com or .co.za.`);
       return false;
     }
     if (password.length < 8) { Alert.alert('Password too short', 'Use at least 8 characters.'); return false; }
@@ -101,7 +101,7 @@ export default function Auth() {
   const diagnose = async () => {
     if (!isSupabaseConfigured) return setReport(`NOT CONFIGURED\n\n${NOT_CONFIGURED}`);
     setReport('Checking…');
-    const lines = [`URL: ${supabaseUrl}`, `Anon key: ${supabaseAnonKey.slice(0, 8)}… (${supabaseAnonKey.length} characters)`];
+    const lines = [`Settings loaded from: ${configSource}`, `URL: ${supabaseUrl}`, `Anon key: ${supabaseAnonKey.slice(0, 8)}… (${supabaseAnonKey.length} characters)`];
     if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(supabaseUrl)) lines.push('WARNING: the URL should look like https://abcdxyz.supabase.co');
     if (!supabaseAnonKey.startsWith('eyJ') && !supabaseAnonKey.startsWith('sb_publishable_')) lines.push('WARNING: this does not look like an anon/publishable key.');
     try {
@@ -143,8 +143,8 @@ export default function Auth() {
     <ScrollView style={styles.page} contentContainerStyle={{ padding: 20, paddingTop: 60 }} keyboardShouldPersistTaps="handled">
       <Text style={styles.h}>Account</Text>
       <Text style={styles.p}>An account lets your trusted contacts and evidence be stored in the cloud. A private account uses no email, but it cannot be recovered if you lose this phone.</Text>
-      <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.vaultMuted} autoCapitalize="none" autoCorrect={false} autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} />
-      <TextInput style={styles.input} placeholder="Password (min 8 characters)" placeholderTextColor={colors.vaultMuted} secureTextEntry autoCapitalize="none" value={password} onChangeText={setPassword} />
+      <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.vaultMuted} autoCapitalize="none" autoCorrect={false} importantForAutofill="no" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <TextInput style={styles.input} placeholder="Password (min 8 characters)" placeholderTextColor={colors.vaultMuted} secureTextEntry autoCapitalize="none" autoCorrect={false} importantForAutofill="no" value={password} onChangeText={setPassword} />
       <VaultButton title="Sign in" loading={busy} onPress={signIn} />
       <VaultButton title="Create account" variant="ghost" loading={busy} onPress={signUp} />
       <VaultButton title="Use a private account (no email)" variant="ghost" loading={busy} onPress={anonymous} />
